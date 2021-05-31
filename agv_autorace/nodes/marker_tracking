@@ -27,7 +27,7 @@ LIM_ROT = 0.2
 
 class FollowMarker:
     def __init__(self):
-        self.TARGET_ID = input("Target ID:")
+        self.target_id = int(input("Target ID:"))
         rospy.init_node('tb3_keep_dist', anonymous = True)
         rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.get_marker)
         rospy.Subscriber('/tb3pose', Pose, self.get_pose)
@@ -61,7 +61,8 @@ class FollowMarker:
     def get_marker(self, msg):
         if len(msg.markers) > 0:
             for msg in msg.markers:
-                if msg.id == TARGET_ID:
+                # if msg.id == TARGET_ID:
+                if msg.id == self.target_id:
                     self.is_find = True
                     if self.is_center_aligned == False and self.is_moving == False:
                         self.move2marker(msg)
