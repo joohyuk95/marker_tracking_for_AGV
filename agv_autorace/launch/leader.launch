@@ -1,0 +1,13 @@
+<launch>
+
+  <group ns="leader">
+    <param name="move_forward" value="False" />
+    <param name="carry_out_mission" value="False" />
+  </group>
+  
+  <node pkg="agv_autorace" name="calibration" type="calibration" output="screen" />
+  <node pkg="agv_autorace" name="lane_detector" type="lane_detector" output="screen" />
+  <node pkg="agv_autorace" name="sign_detector" type="sign_detector" output="screen" />
+  <node pkg="agv_autorace" name="autorace" type="autorace" output="screen" />
+
+</launch>
