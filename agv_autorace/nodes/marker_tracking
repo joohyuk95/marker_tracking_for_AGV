@@ -9,7 +9,7 @@ from geometry_msgs.msg import Twist
 from tf.transformations import euler_from_quaternion
 from sensor_msgs.msg import LaserScan
 
-TARGET_ID = 17
+# TARGET_ID = 17
 MAX_LIN_SPEED = 0.22
 MAX_ANG_SPEED = 2.84
 LIN_SPD = MAX_LIN_SPEED * 0.5
@@ -27,6 +27,7 @@ LIM_ROT = 0.2
 
 class FollowMarker:
     def __init__(self):
+        self.TARGET_ID = input("Target ID:")
         rospy.init_node('tb3_keep_dist', anonymous = True)
         rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.get_marker)
         rospy.Subscriber('/tb3pose', Pose, self.get_pose)

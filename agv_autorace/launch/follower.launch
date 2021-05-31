@@ -1,11 +1,23 @@
 <launch>
 
+<!--Parameter for control-->
   <group ns="follower">
       <param name="aligned" value="False" />
       <param name="found_marker" value="False" />
   </group>
-  
-  <!--node pkg="agv_autorace" name="calibration" type="calibration" output="screen" /-->
+
+<!--Camera incalib-->
+  <arg name="calibration_mode" default="action" doc="calibration_mode type [calibration, action]"/>
+  <arg name="use_gazebo" default="false" doc="gazebo_mode type [true, false]"/>
+  <!--Gazebo False-->
+  <node pkg="image_transport" type="republish" name="republish" args="compressed in:=camera/image raw out:=camera/image" />
+
+  <node ns="camera" pkg="image_proc" type="image_proc" name="image_proc" args="_approximate_sync:=true">
+    <remap from="image_raw" to="image" />
+    <param name="queue_size" value="20" />
+  </node>
+
+
   <node pkg="agv_autorace" name="pub_tb3_pose" type="pub_tb3_pose" output="screen" />
   <node pkg="agv_autorace" name="marker_tracking" type="marker_tracking" output="screen" />
 
