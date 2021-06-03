@@ -15,23 +15,24 @@ MAX_ANG_SPEED = 2.84
 LIN_SPD = MAX_LIN_SPEED * 0.5
 ANG_SPD = MAX_ANG_SPEED * 0.2
 
-OFFSET = 0.1        # carrot offset from target
+OFFSET = 0.25        # carrot offset from target
 CAM_ARM = 0.048     # camera offset from turtlebot rotation centroid
 X_TOLERANCE = 0.02  # tolerance of position.x when aligning center
 ROT_CONST = 0.9     # 90 percent proportion when rotating
-DIST_CONST = 10 / 7
+DIST_CONST = 3.4
 
-LIM_NEAR = 0.1
+LIM_NEAR = 0.14
 LIM_ROT = 0.2
+LIM_TARGET_POINT = 0.3
+LIM_GRAB_POINT = 0.22
 
-
-class FollowMarker:
+class FindWorkspace:
     def __init__(self):
         self.target_id = int(input("Target ID:"))
-        rospy.init_node('marker_tracking', anonymous = True)
+        rospy.init_node('work_point_finding', anonymous = True)
         rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.get_marker)
         rospy.Subscriber('/tb3pose', Pose, self.get_pose)
-        rospy.Subscriber('/scan', LaserScan, self.check_tb)
+        rospy.Subscriber('/scan', LaserScan, self.check_target)
 
         self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)        
         
@@ -41,21 +42,21 @@ class FollowMarker:
         self.z = 0          # distance from camera to marker
         self.center = 0     # postion.x
 
+        self.target_distance = 0
+        self.min_range = 0
+
         self.tw = Twist()
         self.theta = 0
 
         self.tb3pose = Pose()
         self.org = Pose()
 
-        self.relative_angle = 0
-        self.min_range = 0
-
         self.is_center_aligned = False
         self.is_straight_end = False
         self.is_rotate_end = True
         self.is_moving = False
-        
-        self.is_lost = False
+        self.is_1st_look = True
+
         self.is_find = False
 
     def get_marker(self, msg):
@@ -68,15 +69,10 @@ class FollowMarker:
                         self.move2marker(msg)
         else:
             if self.is_find == True:
-                print("lost foward turtlebot")
-                print(degrees(self.relative_angle))
                 self.tw.linear.x = 0
                 self.tw.angular.z = 0
                 self.pub.publish(self.tw)
-                if self.is_rotate_end == True and abs(degrees(self.relative_angle)) > 1: #####
-                    self.is_rotate_end = False
-                    self.rotate(self.relative_angle)   #####
-
+                
             else:
                 print("find target")
                 self.tw.linear.x = 0
@@ -84,6 +80,7 @@ class FollowMarker:
                 self.pub.publish(self.tw)
             
     def move2marker(self, msg):
+        global DIST_CONST
         self.tw.angular.x = 0
         self.tw.angular.z = 0
         self.pub.publish(self.tw)        
@@ -93,8 +90,10 @@ class FollowMarker:
             self.is_moving = True
             self.is_center_aligned = False            
             self.get_marker_info(msg)
- 
-            if self.z > LIM_ROT and abs(self.theta) > pi / 6:
+            if self.is_1st_look == True:                #########
+                self.is_1st_look = False
+                DIST_CONST = 10 / 7
+            if self.z > LIM_ROT and abs(self.theta) > pi / 4:
                 self.calculate_carrot_coordinate()
                 self.rotate(self.angle)
                 if self.is_rotate_end == True:
@@ -109,12 +108,12 @@ class FollowMarker:
             self.is_moving = False
                         
     def align_center(self, msg):
-        #print("align")
+        print("align")
         center = msg.pose.pose.position.x
         if center > X_TOLERANCE:
-            self.tw.angular.z = -ANG_SPD  ######
+            self.tw.angular.z = -ANG_SPD ######
         elif center < -X_TOLERANCE:
-            self.tw.angular.z = ANG_SPD     ######
+            self.tw.angular.z = ANG_SPD    ######
         else:
             self.tw.angular.z = 0        
         self.pub.publish(self.tw)
@@ -123,18 +122,29 @@ class FollowMarker:
             self.is_center_aligned = True
        
     def straight2marker(self):
+        print "straight"
         if self.center > X_TOLERANCE + 0.01:
             self.tw.angular.z = -ANG_SPD * 0.5
         elif self.center < -X_TOLERANCE - 0.01:
             self.tw.angular.z = ANG_SPD * 0.5
         else:
             self.tw.angular.z = 0
-        
+    
         if self.z > LIM_NEAR:
-            self.tw.linear.x = 0.7 * self.z + 0.01      ########
+            self.tw.linear.x = 0.1      ########
         else:
-            self.tw.linear.x = 0
+            #self.tw.linear.x = 0; self.pub.publish(self.tw)
+            if self.min_range < LIM_TARGET_POINT and self.min_range != 0:         
+                self.tw.linear.x = 0; self.pub.publish(self.tw)                
+                rospy.set_param('/follower/aligned', True)  ########
+                self.tw.linear.x = 0.05; self.pub.publish(self.tw)
+                while self.min_range > LIM_GRAB_POINT:    pass
+                print "=============== arrival ==============="
+            elif self.min_range > LIM_TARGET_POINT or self.min_range == 0:               
+                print(round(self.min_range, 4))
+                self.tw.linear.x = 0.1
             
+                                   
         self.pub.publish(self.tw)
 
     def calculate_carrot_coordinate(self):
@@ -208,27 +218,20 @@ class FollowMarker:
         tw.angular.z =  0;  self.pub.publish(tw)
         self.is_rotate_end = True
 
-    def check_tb(self, msg):
-        print("scan")
-        angle = 0
+    def check_target(self, msg):
         t1 = msg.ranges
-        self.min_range = min(i for i in t1 if i > 0)
-        min_index = t1.index(self.min_range)
+        min_range = min(i for i in t1 if i > 0)
+        min_index = t1.index(min_range)
 
-        if min_index > 110 and min_index < 250:
+        if 80 < min_index < 280:
             pass
         else:
-            if min_index < 110:
-                angle = min_index
-            else:
-                angle = min_index - 360
-
-        self.relative_angle = radians(angle)
-
+            self.min_range = min_range
+            
 
 if __name__ == '__main__':
     try:
-        FollowMarker()
+        FindWorkspace()
         rospy.spin()
         
     except rospy.ROSInterruptException:  pass
