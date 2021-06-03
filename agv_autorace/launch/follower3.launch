@@ -1,0 +1,42 @@
+<launch>
+
+  <!--Parameter for communication btw turtlebots-->
+  <group ns="follower">
+      <param name="aligned" value="False" type="bool" />
+      <param name="found_marker" value="False" type="bool" />
+  </group>
+
+  <group ns="tb3">
+    <!--Camera incalib-->
+    <arg name="calibration_mode" default="action" doc="calibration_mode type [calibration, action]"/>
+    <arg name="use_gazebo" default="false" doc="gazebo_mode type [true, false]"/>
+    <node pkg="image_transport" type="republish" name="republish" args="compressed in:=camera/image raw out:=camera/image" />
+    <node ns="camera" pkg="image_proc" type="image_proc" name="image_proc" args="_approximate_sync:=true">
+      <remap from="image_raw" to="image" />
+      <param name="queue_size" value="20" />
+    </node>
+
+    <!--PUB TB3 POSE-->
+    <node pkg="agv_autorace" name="pub_tb3_pose" type="pub_tb3_pose" output="screen" />
+    
+    <!--MARKER TRACKING-->
+    <node pkg="agv_autorace" name="marker_tracking" type="marker_tracking" output="screen" />
+  </group>
+
+  <!--AR_POSE_MARKER-->
+  <arg name="marker_size" default="5.5" />
+  <arg name="max_new_marker_error" default="0.08" />
+  <arg name="max_track_error" default="0.2" />
+  <arg name="cam_image_topic" default="tb3/camera/image" />
+  <arg name="cam_info_topic" default="tb3/camera/camera_info" />
+  <arg name="output_frame" default="camera" />
+  <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+    <param name="marker_size"           type="double" value="$(arg marker_size)" />
+    <param name="max_new_marker_error"  type="double" value="$(arg max_new_marker_error)" />
+    <param name="max_track_error"       type="double" value="$(arg max_track_error)" />
+    <param name="output_frame"          type="string" value="$(arg output_frame)" />
+    <remap from="camera_image"  to="$(arg cam_image_topic)" />
+    <remap from="camera_info"   to="$(arg cam_info_topic)" />
+  </node>
+
+</launch>

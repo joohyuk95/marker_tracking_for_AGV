@@ -8,19 +8,26 @@ from geometry_msgs.msg import Twist
 
 class ControlLane():
     def __init__(self):
+
+        self.is_move_mode = False
+        while self.is_move_mode == False:
+            self.is_move_mode = rospy.get_param('/leader/move_forward', True)
+
         self.sub_lane = rospy.Subscriber('/control/lane', Float64, self.cbFollowLane, queue_size = 1)
         self.sub_max_vel = rospy.Subscriber('/control/max_vel', Float64, self.cbGetMaxVel, queue_size = 1)
         self.pub_cmd_vel = rospy.Publisher('/control/cmd_vel', Twist, queue_size = 1)
 
         self.lastError = 0
-        self.MAX_VEL = 0.12
+        self.MAX_VEL = 0.05
+        # self.MAX_VEL = 0.012
+
 
         rospy.on_shutdown(self.fnShutDown)
 
     def cbGetMaxVel(self, max_vel_msg):
         self.MAX_VEL = max_vel_msg.data
 
-    def cbFollowLane(self, desired_center):
+    def cbFollowLane(self, desired_center): # 각도로 센터 맞추는 거 
         center = desired_center.data
 
         error = center - 500
@@ -49,7 +56,7 @@ class ControlLane():
         twist.angular.x = 0
         twist.angular.y = 0
         twist.angular.z = 0
-        self.pub_cmd_vel.publish(twist) 
+        self.pub_cmd_vel.publish(tlwist) 
 
     def main(self):
         rospy.spin()

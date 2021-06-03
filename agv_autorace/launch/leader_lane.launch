@@ -1,0 +1,34 @@
+<launch>
+
+
+  <!-- launch turtlebot3_autorace_extrinsic_camera_calibration.launch before launch this file -->
+
+  <arg name="calibration_mode" default="calibration" doc="calibration_mode type [calibration, action]"/>
+  <group ns="tb1"> 
+    <!-- lane detection -->
+    <node pkg="turtlebot3_autorace_detect" type="detect_lane" name="detect_lane" output="screen">
+      <rosparam command="load" file="$(find turtlebot3_autorace_detect)/param/lane/lane.yaml" />
+      <param if="$(eval calibration_mode == 'calibration')" name="/is_detection_calibration_mode" value="True"/>
+      <param if="$(eval calibration_mode == 'action')" name="/is_detection_calibration_mode" value="False"/>    
+      <remap from="/detect/image_input" to="/tb1/camera/image_projected_compensated" />
+      <remap from="/detect/image_input/compressed" to="/tb1/camera/image_projected_compensated/compressed" />
+      <remap from="/detect/image_output" to="/tb1/detect/image_lane" />
+      <remap from="/detect/image_output/compressed" to="/tb1/detect/image_lane/compressed" />
+      <remap from="/detect/image_output_sub1" to="/tb1/detect/image_white_lane_marker" />
+      <remap from="/detect/image_output_sub1/compressed" to="/tb1/detect/image_white_lane_marker/compressed" />
+      <remap from="/detect/image_output_sub2" to="/tb1/detect/image_yellow_lane_marker" />
+      <remap from="/detect/image_output_sub2/compressed" to="/tb1/detect/image_yellow_lane_marker/compressed" />  
+      <remap from="/detect/lane" to="/tb1/detect/lane" /> 
+      <remap from="/detect/yellow_line_reliability" to="/tb1/detect/yellow_line_reliability" />        
+      <remap from="/detect/white_line_reliability" to="/tb1/detect/white_line_reliability" />               
+    </node>
+
+  <!-- launch turtlebot3_autorace_detect_lane.launch before launch this file -->
+
+    <!-- lane control -->
+    <node pkg="turtlebot3_autorace_control" type="control_lane" name="control_lane" output="screen">
+        <remap from="/control/lane" to="/tb1/detect/lane" />
+        <remap from="/control/cmd_vel" to="/tb1/cmd_vel" />
+    </node>
+  </group>  
+</launch>
