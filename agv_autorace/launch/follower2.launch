@@ -1,13 +1,11 @@
 <launch>
 
-  <!--Parameter for communication btw turtlebots-->
-  <group ns="follower">
-      <param name="aligned" value="False" type="bool" />
-      <param name="found_marker" value="False" type="bool" />
-  </group>
-
   <group ns="tb2">
-    <!--Camera incalib-->
+  <!--Parameter for communication btw turtlebots-->
+    <param name="mission_start" value="False" type="bool" /> 
+    <param name="mission_finished" value="False" type="bool" /> 
+       
+  <!--Camera incalib--> 
     <arg name="calibration_mode" default="action" doc="calibration_mode type [calibration, action]"/>
     <arg name="use_gazebo" default="false" doc="gazebo_mode type [true, false]"/>
     <node pkg="image_transport" type="republish" name="republish" args="compressed in:=camera/image raw out:=camera/image" />

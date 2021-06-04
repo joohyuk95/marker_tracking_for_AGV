@@ -1,12 +1,11 @@
 <launch>
 
-  <!--Parameter for communication btw turtlebots-->
-  <group ns="follower">
-      <param name="aligned" value="False" type="bool" />
-      <param name="found_marker" value="False" type="bool" />
-  </group>
-
   <group ns="tb3">
+  <!--Parameter for communication btw turtlebots-->
+    <param name="mission_start" value="False" type="bool" /> 
+    <param name="mission_finished" value="False" type="bool" /> 
+    <param name="aligned" value="False" type="bool" /> 
+
     <!--Camera incalib-->
     <arg name="calibration_mode" default="action" doc="calibration_mode type [calibration, action]"/>
     <arg name="use_gazebo" default="false" doc="gazebo_mode type [true, false]"/>
@@ -20,7 +19,10 @@
     <node pkg="agv_autorace" name="pub_tb3_pose" type="pub_tb3_pose" output="screen" />
     
     <!--MARKER TRACKING-->
-    <node pkg="agv_autorace" name="marker_tracking" type="marker_tracking" output="screen" />
+    <node pkg="agv_autorace" name="marker_tracking" type="marker_tracking" output="screen">
+      <remap from="/cmd_vel" to="/tb3/cmd_vel" />
+    </node>   
+
   </group>
 
   <!--AR_POSE_MARKER-->

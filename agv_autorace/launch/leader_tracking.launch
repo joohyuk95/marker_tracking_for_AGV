@@ -1,10 +1,10 @@
 <launch>
 
-
   <!-- launch turtlebot3_autorace_extrinsic_camera_calibration.launch before launch this file -->
 
   <arg name="calibration_mode" default="calibration" doc="calibration_mode type [calibration, action]"/>
   <group ns="tb1"> 
+    <param name="move_forward" value="False" type="bool" />  
     <!-- lane detection -->
     <node pkg="turtlebot3_autorace_detect" type="detect_lane" name="detect_lane" output="screen">
       <rosparam command="load" file="$(find turtlebot3_autorace_detect)/param/lane/lane.yaml" />
@@ -31,4 +31,36 @@
         <remap from="/control/cmd_vel" to="/tb1/cmd_vel" />
     </node>
   </group>  
+
+
+  <group ns="tb1">
+    <param name="move_forward" value="False" type="bool"/>
+  </group>
+  
+  <group ns="tb2">  
+    <param name="mission_start" value="False" type="bool" />
+  </group>
+
+  <group ns="tb3">
+    <param name="mission_start" value="False" type="bool" />
+  </group>
+
+  <!-- traffic_light detection -->
+  <group ns="tb1">
+    <node pkg="agv_autorace" type="sign_detector" name="sign_detector" output="screen">
+      <rosparam command="load" file="$(find agv_autorace)/param/sign_detector.yaml" />
+      <param name="/is_detection_calibration_mode" value="False"/>     
+      <remap from="/detect/image_input" to="/tb1/camera/image_compensated" />
+      <remap from="/detect/image_input/compressed" to="/tb1/camera/image_compensated/compressed" />
+      <remap from="/detect/image_output" to="/tb1/detect/image_traffic_light" />
+      <remap from="/detect/image_output/compressed" to="/tb1/detect/image_traffic_light/compressed" />
+      <remap from="/detect/image_output_sub1" to="/tb1/detect/image_red_light" />
+      <remap from="/detect/image_output_sub1/compressed" to="/tb1/detect/image_red_light/compressed" />
+      <remap from="/detect/image_output_sub2" to="/tb1/detect/image_blue_light" />
+      <remap from="/detect/image_output_sub2/compressed" to="/tb1/detect/image_blue_light/compressed" />
+      <remap from="/detect/image_output_sub3" to="/tb1/detect/image_green_light" />
+      <remap from="/detect/image_output_sub3/compressed" to="/tb1/detect/image_green_light/compressed" />  
+    </node>
+  </group>
+  
 </launch>

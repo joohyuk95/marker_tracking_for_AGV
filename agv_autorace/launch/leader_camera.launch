@@ -1,10 +1,4 @@
 <launch>
-
-  <group ns="leader">
-    <param name="move_forward" value="False" type="bool" />
-    <param name="carry_out_mission" value="False" type="bool" />
-  </group>
-
   <arg name="calibration_mode" default="action" doc="calibration_mode type [calibration, action]"/>
   <arg name="use_gazebo" default="false" doc="gazebo_mode type [true, false]"/>
 
