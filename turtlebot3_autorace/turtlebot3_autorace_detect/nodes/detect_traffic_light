@@ -418,3 +418,4 @@ class DetectTrafficLight():
 if __name__ == '__main__':
     rospy.init_node('detect_traffic_light')
     node = DetectTrafficLight()
+    node.main()

@@ -67,54 +67,7 @@ class DetectSign():
         while not rospy.is_shutdown():
             if self.is_image_available == True:
                 self.fnFindSign()
-
             loop_rate.sleep()
-
-    def cbGetDetectSignParam(self, config, level):
-        rospy.loginfo("hue_red_l : %d", config.hue_red_l)
-        rospy.loginfo("hue_red_h : %d", config.hue_red_h)
-        rospy.loginfo("saturation_red_l : %d", config.saturation_red_l)
-        rospy.loginfo("saturation_red_h : %d", config.saturation_red_h)
-        rospy.loginfo("lightness_red_l : %d", config.lightness_red_l)
-        rospy.loginfo("lightness_red_h : %d", config.lightness_red_h)
-
-        rospy.loginfo("hue_blue_l : %d", config.hue_blue_l)
-        rospy.loginfo("hue_blue_h : %d", config.hue_blue_h)
-        rospy.loginfo("saturation_blue_l : %d", config.saturation_blue_l)
-        rospy.loginfo("saturation_blue_h : %d", config.saturation_blue_h)
-        rospy.loginfo("lightness_blue_l : %d", config.lightness_blue_l)
-        rospy.loginfo("lightness_blue_h : %d", config.lightness_blue_h)
-
-        rospy.loginfo("hue_green_l : %d", config.hue_green_l)
-        rospy.loginfo("hue_green_h : %d", config.hue_green_h)
-        rospy.loginfo("saturation_green_l : %d", config.saturation_green_l)
-        rospy.loginfo("saturation_green_h : %d", config.saturation_green_h)
-        rospy.loginfo("lightness_green_l : %d", config.lightness_green_l)
-        rospy.loginfo("lightness_green_h : %d", config.lightness_green_h)
-
-        self.hue_red_l = config.hue_red_l
-        self.hue_red_h = config.hue_red_h
-        self.saturation_red_l = config.saturation_red_l
-        self.saturation_red_h = config.saturation_red_h
-        self.lightness_red_l = config.lightness_red_l
-        self.lightness_red_h = config.lightness_red_h
-
-        self.hue_blue_l = config.hue_blue_l
-        self.hue_blue_h = config.hue_blue_h
-        self.saturation_blue_l = config.saturation_blue_l
-        self.saturation_blue_h = config.saturation_blue_h
-        self.lightness_blue_l = config.lightness_blue_l
-        self.lightness_blue_h = config.lightness_blue_h
-
-        self.hue_green_l = config.hue_green_l
-        self.hue_green_h = config.hue_green_h
-        self.saturation_green_l = config.saturation_green_l
-        self.saturation_green_h = config.saturation_green_h
-        self.lightness_green_l = config.lightness_green_l
-        self.lightness_green_h = config.lightness_green_h
-
-        return config
-
 
     def cbGetImage(self, image_msg):
         # drop the frame to 1/5 (6fps) because of the processing speed. This is up to your computer's operating power.

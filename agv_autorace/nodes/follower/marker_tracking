@@ -2,6 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import rospy
+from rospy.client import set_param
 from turtlesim.msg import Pose
 from math import degrees, radians, pi, cos, sin, asin, sqrt
 from ar_track_alvar_msgs.msg import AlvarMarkers
@@ -29,9 +30,17 @@ class FollowMarker:
     def __init__(self):
         self.target_id = int(input("Target ID:"))
         rospy.init_node('marker_tracking', anonymous = True)
+
+        # initialize aligned parameter for starting tb1 (0607)
+        self.tb_id = rospy.get_param('/tb_id')
+        rospy.set_param('/'+self.tb_id+'/aligned', False)
+        print(rospy.get_param('/'+self.tb_id+'/aligned'))
+        self.align_count = 0
+        ###
+        
         rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.get_marker)
-        rospy.Subscriber('/tb3pose', Pose, self.get_pose)
-        rospy.Subscriber('/scan', LaserScan, self.check_tb)
+        rospy.Subscriber('/'+self.tb_id+'/tb3pose', Pose, self.get_pose)
+        rospy.Subscriber('/'+self.tb_id+'/scan', LaserScan, self.check_tb)
 
         self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)        
         
@@ -66,6 +75,16 @@ class FollowMarker:
                     self.is_find = True
                     if self.is_center_aligned == False and self.is_moving == False:
                         self.move2marker(msg)
+                        ### align 카운터를 확인하여 20회 이상이면 align 완료됐다고 봄(0607)
+                        print "aligned" 
+                        self.align_count += 1
+                        print(self.align_count)
+                        if self.align_count > 20:
+                            rospy.set_param('/'+self.tb_id+'/aligned', True)
+                            self.test = rospy.get_param('/'+self.tb_id+'/aligned')
+                            print(self.test)
+                        ###
+                    
         else:
             if self.is_find == True:
                 print("lost foward turtlebot")

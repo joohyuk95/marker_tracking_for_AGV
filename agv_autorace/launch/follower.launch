@@ -1,11 +1,10 @@
 <launch>
 
-  <group ns="tb2">
-  <!--Parameter for communication btw turtlebots-->
-    <param name="mission_start" value="False" type="bool" /> 
-    <param name="mission_finished" value="False" type="bool" /> 
-       
-  <!--Camera incalib--> 
+  <arg name="tb_num" />
+  <param name="tb_id" value="$(arg tb_num)" />
+
+  <group ns="$(arg tb_num)">
+    <!--Camera incalib-->
     <arg name="calibration_mode" default="action" doc="calibration_mode type [calibration, action]"/>
     <arg name="use_gazebo" default="false" doc="gazebo_mode type [true, false]"/>
     <node pkg="image_transport" type="republish" name="republish" args="compressed in:=camera/image raw out:=camera/image" />
@@ -18,15 +17,18 @@
     <node pkg="agv_autorace" name="pub_tb3_pose" type="pub_tb3_pose" output="screen" />
     
     <!--MARKER TRACKING-->
-    <node pkg="agv_autorace" name="marker_tracking" type="marker_tracking" output="screen" />
+    <node pkg="agv_autorace" name="marker_tracking" type="marker_tracking" output="screen">
+      <remap from="/cmd_vel" to="/$(arg tb_num)/cmd_vel" />
+    </node>   
+
   </group>
 
   <!--AR_POSE_MARKER-->
   <arg name="marker_size" default="5.5" />
   <arg name="max_new_marker_error" default="0.08" />
   <arg name="max_track_error" default="0.2" />
-  <arg name="cam_image_topic" default="tb2/camera/image" />
-  <arg name="cam_info_topic" default="tb2/camera/camera_info" />
+  <arg name="cam_image_topic" default="$(arg tb_num)/camera/image" />
+  <arg name="cam_info_topic" default="$(arg tb_num)/camera/camera_info" />
   <arg name="output_frame" default="camera" />
   <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
     <param name="marker_size"           type="double" value="$(arg marker_size)" />

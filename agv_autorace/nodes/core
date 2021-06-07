@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import rospy
+
+class AutoraceCore:
+    def __init__(self):
+        rospy.init_node('core', anonymous = True)
+
+
+if __name__ == '__main__':
+    try:
+        AutoraceCore()
+        rospy.spin()
+        
+    except rospy.ROSInterruptException:  pass

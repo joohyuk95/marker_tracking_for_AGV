@@ -23,7 +23,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-
 install(DIRECTORY cfg file launch param
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

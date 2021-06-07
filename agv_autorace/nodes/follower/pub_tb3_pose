@@ -10,10 +10,12 @@ from math import degrees, pi
 
 class TB3Pose2D:
     def __init__(self):
-        rospy.init_node('pub_tb3_pose', anonymous = True)
-        rospy.Subscriber('/odom', Odometry, self.get_odom)
+        self.tb_id = rospy.get_param('/tb_id')
 
-        self.pub = rospy.Publisher('/tb3pose', Pose, queue_size = 10)        
+        rospy.init_node('pub_tb3_pose', anonymous = True)
+        rospy.Subscriber('/'+self.tb_id+'/odom', Odometry, self.get_odom)
+
+        self.pub = rospy.Publisher('/'+self.tb_id+'/tb3pose', Pose, queue_size = 10)        
         self.tb3pose2d = Pose()
         self.previous_angle = 0.0           # angular position range (0, 2pi) radinans 
         self.angular_displacement = 0.0     # angular displacement range (-inf, +inf) radians
