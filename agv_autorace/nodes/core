@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from roslaunch.rlutil import change_terminal_name
 import rospy
 
 class AutoraceCore:
     def __init__(self):
         rospy.init_node('core', anonymous = True)
-
+        self.tb1moveforward = rospy.get_param('/tb1/move_forward')
+        self.tb2missionstart = rospy.get_param('/tb2/mission_start')
+        self.tb2missionfinished = rospy.get_param('/tb2/mission_finished')
+        self.tb2aligned = rospy.get_param('/tb2/aligned')
+        self.tb3missionstart = rospy.get_param('/tb3/mission_start')
+        self.tb3missionfinished = rospy.get_param('/tb3/mission_finished')
+        self.tb3aligned = rospy.get_param('/tb3/aligned')
 
 if __name__ == '__main__':
     try:

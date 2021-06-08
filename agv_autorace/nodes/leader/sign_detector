@@ -11,9 +11,8 @@ class DetectSign():
     def __init__(self):
 
         # parameter for communication
-        self.move_forward = rospy.set_param('/tb1/move_forward', True)
-        self.mission2 = rospy.set_param('/tb2/mission_start', False)
-        self.mission3 = rospy.set_param('/tb3/mission_start', False)        
+        # rospy.set_param('/tb2/mission_start', False)
+        # rospy.set_param('/tb3/mission_start', False)        
 
         # color parameter 
         self.hue_red_l = rospy.get_param("~detect/lane/red/hue_l", 0)
@@ -88,25 +87,35 @@ class DetectSign():
     def fnFindSign(self):
         cv_image_mask_g = self.fnMaskGreenSign()
         cv_image_mask_g = cv2.GaussianBlur(cv_image_mask_g,(5,5),0)
+        self.detected_green = np.count_nonzero(cv_image_mask_g == 0)
         print("GREEN : ", np.count_nonzero(cv_image_mask_g == 0))
 
         cv_image_mask_b = self.fnMaskBlueSign()
         cv_image_mask_b = cv2.GaussianBlur(cv_image_mask_b,(5,5),0)
+        self.detected_blue = np.count_nonzero(cv_image_mask_b == 0)
         print("BLUE : ", np.count_nonzero(cv_image_mask_b == 0))
 
         cv_image_mask_r = self.fnMaskRedSign()
         cv_image_mask_r = cv2.GaussianBlur(cv_image_mask_r,(5,5),0)
-        print("RED : ", np.count_nonzero(cv_image_mask_r == 0))
+        self.detected_red = np.count_nonzero(cv_image_mask_r == 0)
+        print("RED : ", self.detected_red)
 
-        if np.count_nonzero(cv_image_mask_g == 0) > 1000:
-            self.mission3 = rospy.set_param('/tb3/mission_start', True)
+        if self.detected_green > 5000:
+            rospy.set_param('/tb3/mission_start', True)
             print(rospy.get_param('/tb3/mission_start'))    
-        if np.count_nonzero(cv_image_mask_b == 0) > 1000:
-            self.mission2 = rospy.set_param('/tb2/mission_start', True)
+
+        if self.detected_blue > 5000:
+            rospy.set_param('/tb2/mission_start', True)
             print(rospy.get_param('/tb3/mission_start'))    
-        if np.count_nonzero(cv_image_mask_r == 0) > 1000:
-            self.move_forward = rospy.set_param('/tb1/move_forward', False)
-            print(rospy.get_param('/tb2/mission_start'))    
+
+        if self.detected_red > 3000:
+            rospy.set_param('/tb1/move_forward', False)
+            print(rospy.get_param('/tb2/mission_start'))
+
+        if self.detected_red > 2000 and rospy.get_param('/tb3/aligned') == True:
+            self.detected_red = 0
+            rospy.set_param('/tb1/move_forward', True)
+                
 
     def fnMaskRedSign(self):
         image = np.copy(self.cv_image)

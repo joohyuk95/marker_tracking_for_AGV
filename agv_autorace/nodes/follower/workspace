@@ -29,10 +29,10 @@ LIM_GRAB_POINT = 0.22
 class FindWorkspace:
     def __init__(self):
         self.target_id = int(input("Target ID:"))
-        rospy.init_node('find_workspace', anonymous = True)
-        rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.get_marker)
-        rospy.Subscriber('/tb3pose', Pose, self.get_pose)
-        rospy.Subscriber('/scan', LaserScan, self.check_target)
+        rospy.init_node('workspace', anonymous = True)
+        rospy.Subscriber('/'+self.tb_id+'/ar_pose_marker', AlvarMarkers, self.get_marker)
+        rospy.Subscriber('/'+self.tb_id+'/tb3pose', Pose, self.get_pose)
+        rospy.Subscriber('/'+self.tb_id+'/scan', LaserScan, self.check_target)
 
         self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)        
         

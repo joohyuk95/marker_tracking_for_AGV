@@ -39,11 +39,11 @@ class FollowMarker:
         ###
         
         rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.get_marker)
-        rospy.Subscriber('/'+self.tb_id+'/tb3pose', Pose, self.get_pose)
-        rospy.Subscriber('/'+self.tb_id+'/scan', LaserScan, self.check_tb)
+        rospy.Subscriber('/tb3pose', Pose, self.get_pose)
+        rospy.Subscriber('/scan', LaserScan, self.check_tb)
 
         self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)        
-        
+
         self.distance = 0   # distance from turtlebot rotation center to marker
         self.angle = 0
 
