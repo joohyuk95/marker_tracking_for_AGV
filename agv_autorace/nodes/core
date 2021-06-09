@@ -7,10 +7,18 @@ import rospy
 class AutoraceCore:
     def __init__(self):
         rospy.init_node('core', anonymous = True)
+
+        # tb1 parameters
         self.tb1moveforward = rospy.get_param('/tb1/move_forward')
+        self.tb1parkingstart = rospy.get_param('/tb1/parking_start')
+        self.tb1parkingfinished = rospy.get_param('/tb1/parking_finished')
+
+        # tb2 parameters
         self.tb2missionstart = rospy.get_param('/tb2/mission_start')
         self.tb2missionfinished = rospy.get_param('/tb2/mission_finished')
         self.tb2aligned = rospy.get_param('/tb2/aligned')
+
+        # tb3 parameters
         self.tb3missionstart = rospy.get_param('/tb3/mission_start')
         self.tb3missionfinished = rospy.get_param('/tb3/mission_finished')
         self.tb3aligned = rospy.get_param('/tb3/aligned')

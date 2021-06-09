@@ -1,5 +1,6 @@
 <launch>
   <group ns="tb1"> 
+
    <!-- lane detection -->
     <node pkg="agv_autorace" type="lane_detector" name="lane_detector" output="screen">
       <remap from="/detect/image_input" to="/tb1/camera/image_projected_compensated" />
@@ -14,11 +15,13 @@
       <remap from="/detect/yellow_line_reliability" to="/tb1/detect/yellow_line_reliability" />        
       <remap from="/detect/white_line_reliability" to="/tb1/detect/white_line_reliability" />               
     </node>
+
   <!-- lane control -->
     <node pkg="agv_autorace" type="lane_controller" name="lane_controller" output="screen">
         <remap from="/control/lane" to="/tb1/detect/lane" />
         <remap from="/control/cmd_vel" to="/tb1/cmd_vel" />
     </node>
+
   <!-- sign detection -->
     <node pkg="agv_autorace" type="sign_detector" name="sign_detector" output="screen">
       <param name="/is_detection_calibration_mode" value="False"/>     
@@ -41,6 +44,13 @@
       <remap from="/detect/scan" to="/tb1/scan" />
       <remap from="/detect/image_output" to="/tb1/detect/image_parking" />
       <remap from="/detect/image_output/compressed" to="/tb1/detect/image_parking/compressed" />
+    </node>
+
+    <!-- Parking control-->
+    <node pkg="turtlebot3_autorace_control" type="parking_controller" name="parking_controller" output="screen">
+      <remap from="/control/lane" to="/tb1/detect/lane" />
+      <remap from="/control/cmd_vel" to="/tb1/cmd_vel" />
+      <remap from="/control/odom" to="/tb1/odom" />
     </node>
 
   </group>  

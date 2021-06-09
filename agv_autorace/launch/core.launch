@@ -2,6 +2,8 @@
 
   <group ns="tb1">
     <param name="move_forward" value="False" type="bool"/>
+    <param name="parking_start" value="False" type="bool"/>
+    <param name="parking_finished" value="False" type="bool"/>
   </group>
   <group ns="tb2">  
     <param name="mission_start" value="False" type="bool" />
