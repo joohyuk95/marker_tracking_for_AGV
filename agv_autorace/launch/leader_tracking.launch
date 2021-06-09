@@ -33,5 +33,15 @@
       <remap from="/detect/image_output_sub3" to="/tb1/detect/image_green_light" />
       <remap from="/detect/image_output_sub3/compressed" to="/tb1/detect/image_green_light/compressed" />  
     </node>
+
+    <!-- parking lot detection -->
+    <node pkg="agv_autorace" type="parkinglot_detector" name="parkinglot_detector" output="screen">
+      <remap from="/detect/image_input" to="/tb1/camera/image_projected_compensated" />
+      <remap from="/detect/image_input/compressed" to="/tb1/camera/image_projected_compensated/compressed" />
+      <remap from="/detect/scan" to="/tb1/scan" />
+      <remap from="/detect/image_output" to="/tb1/detect/image_parking" />
+      <remap from="/detect/image_output/compressed" to="/tb1/detect/image_parking/compressed" />
+    </node>
+
   </group>  
 </launch>
