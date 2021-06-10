@@ -9,9 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_python_setup()
 
 generate_dynamic_reconfigure_options(
-  cfg/DetectLaneParams.cfg
-  cfg/DetectLevelParams.cfg
-  cfg/DetectTrafficLightParams.cfg
+
 )
 
 catkin_package(

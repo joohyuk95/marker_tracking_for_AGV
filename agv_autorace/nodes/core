@@ -11,15 +11,17 @@ class AutoraceCore:
         # tb1 parameters
         self.tb1moveforward = rospy.get_param('/tb1/move_forward')
         self.tb1parkingstart = rospy.get_param('/tb1/parking_start')
-        self.tb1parkingfinished = rospy.get_param('/tb1/parking_finished')
+        self.tb1findparkinglot = rospy.get_param('/tb1/find_parkinglot')
 
         # tb2 parameters
         self.tb2missionstart = rospy.get_param('/tb2/mission_start')
+        self.tb2mission = rospy.get_param('/tb2/mission')
         self.tb2missionfinished = rospy.get_param('/tb2/mission_finished')
         self.tb2aligned = rospy.get_param('/tb2/aligned')
 
         # tb3 parameters
         self.tb3missionstart = rospy.get_param('/tb3/mission_start')
+        self.tb3mission = rospy.get_param('/tb3/mission')        
         self.tb3missionfinished = rospy.get_param('/tb3/mission_finished')
         self.tb3aligned = rospy.get_param('/tb3/aligned')
 
