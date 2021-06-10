@@ -1,5 +1,7 @@
 <launch>
 
+<!--roslaunch agv_autorace follower.launch tb_num:=tb3-->
+
   <arg name="tb_num" />
   <param name="tb_id" value="$(arg tb_num)" />
 

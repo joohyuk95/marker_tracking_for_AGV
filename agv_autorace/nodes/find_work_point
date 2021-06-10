@@ -2,12 +2,12 @@
 #-*- coding: utf-8 -*-
 
 import rospy
-from ar_track_alvar_msgs.msg import AlvarMarkers
 from turtlesim.msg import Pose
-from sensor_msgs.msg import LaserScan
 from math import degrees, radians, pi, cos, sin, asin, sqrt
+from ar_track_alvar_msgs.msg import AlvarMarkers
 from geometry_msgs.msg import Twist
 from tf.transformations import euler_from_quaternion
+from sensor_msgs.msg import LaserScan
 
 # TARGET_ID = 17
 MAX_LIN_SPEED = 0.22
@@ -17,23 +17,22 @@ ANG_SPD = MAX_ANG_SPEED * 0.2
 
 OFFSET = 0.25       # carrot offset from target
 CAM_ARM = 0.048     # camera offset from turtlebot rotation centroid
-X_TOLERANCE = 0.02  
-ROT_CONST = 0.9     
+X_TOLERANCE = 0.02  # tolerance of position.x when aligning center
+ROT_CONST = 0.9     # 90 percent proportion when rotating
 DIST_CONST = 3.4
 
 LIM_NEAR = 0.14
-LIM_ROT = 0.2
+LIM_ROT = 0.2   
 LIM_TARGET_POINT = 0.3
 LIM_GRAB_POINT = 0.22
 
-
-class FindRallyPoint:
+class FollowMarker:
     def __init__(self):
         self.target_id = int(input("Target ID:"))
-        rospy.init_node('rally_point', anonymous = True)
-        rospy.Subscriber('/'+self.tb_id+'/ar_pose_marker', AlvarMarkers, self.get_marker, queue_size = 1)
-        rospy.Subscriber('/'+self.tb_id+'/tb3pose', Pose, self.get_pose, queue_size = 1)
-        rospy.Subscriber('/'+self.tb_id+'/scan', LaserScan, self.check_target, queue_size = 1)
+        rospy.init_node('tb3_keep_dist', anonymous = True)
+        rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.get_marker, queue_size = 1)
+        rospy.Subscriber('/tb3pose', Pose, self.get_pose, queue_size = 1)
+        rospy.Subscriber('/scan', LaserScan, self.check_target, queue_size = 1)
 
         self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size = 1)        
         
@@ -59,7 +58,6 @@ class FindRallyPoint:
         self.is_1st_look = True
 
         self.is_find = False
-        self.is_1st_back = True
 
     def get_marker(self, msg):
         if len(msg.markers) > 0:
@@ -76,9 +74,6 @@ class FindRallyPoint:
                 self.pub.publish(self.tw)
                 
             else:
-                if self.is_1st_back == True:
-                    self.is_1st_back = False
-                    self.straight(-0.1)
                 print("find target")
                 self.tw.linear.x = 0
                 self.tw.angular.z = ANG_SPD
@@ -95,7 +90,7 @@ class FindRallyPoint:
             self.is_moving = True
             self.is_center_aligned = False            
             self.get_marker_info(msg)
-            if self.is_1st_look == True:
+            if self.is_1st_look == True:                #########
                 self.is_1st_look = False
                 DIST_CONST = 10 / 7
             if self.z > LIM_ROT and abs(self.theta) > pi / 4:
@@ -116,9 +111,9 @@ class FindRallyPoint:
         print("align")
         center = msg.pose.pose.position.x
         if center > X_TOLERANCE:
-            self.tw.angular.z = -ANG_SPD
+            self.tw.angular.z = -ANG_SPD ######
         elif center < -X_TOLERANCE:
-            self.tw.angular.z = ANG_SPD
+            self.tw.angular.z = ANG_SPD    ######
         else:
             self.tw.angular.z = 0        
         self.pub.publish(self.tw)
@@ -128,18 +123,22 @@ class FindRallyPoint:
        
     def straight2marker(self):
         print "straight"
-        #if self.center > X_TOLERANCE + 0.01:
-        #    self.tw.angular.z = -ANG_SPD * 0.5
-        #elif self.center < -X_TOLERANCE - 0.01:
-        #    self.tw.angular.z = ANG_SPD * 0.5
-        #else:
-        #    self.tw.angular.z = 0
-    
+
         if self.z > LIM_NEAR:
             self.tw.linear.x = 0.1      ########
-        elif self.min_range < LIM_TARGET_POINT and self.min_range != 0:
-            self.tw.linear.x = 0
+        else:
+            #self.tw.linear.x = 0; self.pub.publish(self.tw)
+            if self.min_range < LIM_TARGET_POINT and self.min_range != 0:         
+                self.tw.linear.x = 0; self.pub.publish(self.tw)                
+                rospy.set_param('/follower/aligned', True)  ########
+                self.tw.linear.x = 0.05; self.pub.publish(self.tw)
+                while self.min_range > LIM_GRAB_POINT:    pass
+                print "=============== arrival ==============="
+            elif self.min_range > LIM_TARGET_POINT or self.min_range == 0:               
+                print(round(self.min_range, 4))
+                self.tw.linear.x = 0.1
             
+                                   
         self.pub.publish(self.tw)
 
     def calculate_carrot_coordinate(self):
@@ -226,7 +225,7 @@ class FindRallyPoint:
 
 if __name__ == '__main__':
     try:
-        FindRallyPoint()
+        FollowMarker()
         rospy.spin()
         
     except rospy.ROSInterruptException:  pass
