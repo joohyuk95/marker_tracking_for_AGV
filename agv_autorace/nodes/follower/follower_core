@@ -1,0 +1,353 @@
+#!/usr/bin/env python
+#-*- coding: utf-8 -*-
+
+import rospy
+from ar_track_alvar_msgs.msg import AlvarMarkers
+from turtlesim.msg import Pose
+from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
+from enum import Enum
+from tf.transformations import euler_from_quaternion
+from math import degrees, radians, pi, cos, sin, asin, sqrt
+
+# TARGET_ID = 17
+MAX_LIN_SPEED = 0.22
+MAX_ANG_SPEED = 2.84
+LIN_SPD = MAX_LIN_SPEED * 0.5
+ANG_SPD = MAX_ANG_SPEED * 0.2
+
+OFFSET = 0.1        # 0.25
+CAM_ARM = 0.048     
+X_TOLERANCE = 0.02  
+ROT_CONST = 0.9     
+DIST_CONST = 10 / 7 # 3.4
+
+LIM_NEAR = 0.1      # 0.14
+LIM_ROT = 0.2       
+LIM_TARGET_POINT = 0.3
+LIM_GRAB_POINT = 0.22
+
+
+class FollowerMission:
+    def __init__(self):
+        self.target_id = int(input("Target ID:"))
+        rospy.init_node('marker_tracking', anonymous = True)
+
+        # initialize aligned parameter for starting tb1 (0607)
+        self.tb_id = rospy.get_param('/tb_id')
+        rospy.set_param('/'+self.tb_id+'/aligned', False)
+        print(rospy.get_param('/'+self.tb_id+'/aligned'))
+        self.align_count = 0
+        ###
+        
+        rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.cbGetMarker, queue_size = 1)
+        rospy.Subscriber('/tb3pose', Pose, self.cbGetPose, queue_size = 1)
+        rospy.Subscriber('/scan', LaserScan, self.cbScan, queue_size = 1)
+
+        self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)        
+
+        self.StepOfMission = Enum('StepOfMission', 'track_marker_first work_space gathering_point track_marker_second parking')
+        self.current_step_of_mission = self.StepOfMission.track_marker_first.value
+
+        self.distance = 0
+        self.angle = 0
+
+        self.z = 0
+        self.center = 0
+
+        self.tw = Twist()
+        self.theta = 0
+
+        self.tb3pose = Pose()
+        self.org = Pose()
+
+        self.relative_angle = 0
+        self.min_range = 0
+
+        self.is_center_aligned = False
+        self.is_straight_end = False
+        self.is_rotate_end = True
+        self.is_moving = False
+        self.is_1st_look = True
+        self.is_1st_back = True
+        
+        self.is_lost = False
+        self.is_find = False
+
+    def cbGetMarker(self, msg):
+        if self.current_step_of_mission == self.StepOfMission.track_marker_first.value:
+            if rospy.get_param() == False:       #========================================================
+                if len(msg.markers) > 0:
+                    for msg in msg.markers:
+                        if msg.id == self.target_id:
+                            self.is_find = True
+                            if self.is_center_aligned == False and self.is_moving == False:
+                                self.move2marker(msg, self.current_step_of_mission)
+                                ### align 카운터를 확인하여 20회 이상이면 align 완료됐다고 봄(0607)
+                                print "aligned" 
+                                self.align_count += 1
+                                print(self.align_count)
+                                if self.align_count > 20:
+                                    rospy.set_param('/'+self.tb_id+'/aligned', True)
+                                    self.test = rospy.get_param('/'+self.tb_id+'/aligned')
+                                    print(self.test)
+                                ###
+                            
+                else:
+                    if self.is_find == True:
+                        print("lost foward turtlebot")
+                        print(degrees(self.relative_angle))
+                        self.tw.linear.x = 0
+                        self.tw.angular.z = 0
+                        self.pub.publish(self.tw)
+                        if self.is_rotate_end == True and abs(degrees(self.relative_angle)) > 1:
+                            self.rotate(self.relative_angle)
+
+                    else:
+                        print("find target")
+                        self.tw.linear.x = 0
+                        self.tw.angular.z = ANG_SPD
+                        self.pub.publish(self.tw)
+            else:
+                Stop()
+                self.current_step_of_mission = self.StepOfMission.work_space.value
+
+        elif self.current_step_of_mission == self.StepOfMission.work_space.value:
+            global LIM_NEAR
+            LIM_NEAR = 0.14
+            self.target_id = 5
+            if rospy.get_param() == False:       #========================================================  parameter
+                if len(msg.markers) > 0:
+                    for msg in msg.markers:
+                        if msg.id == self.target_id:
+                            self.is_find = True
+                            if self.is_center_aligned == False and self.is_moving == False:
+                                self.move2marker(msg, self.current_step_of_mission)
+                else:
+                    if self.is_find == True:
+                        self.tw.linear.x = 0
+                        self.tw.angular.z = 0
+                        self.pub.publish(self.tw)
+
+                    else:
+                        print("find target")
+                        self.tw.linear.x = 0
+                        self.tw.angular.z = -ANG_SPD                    ################################ tb3 cw
+                        self.pub.publish(self.tw)
+            
+            else:
+                Stop()
+                self.current_step_of_mission = self.StepOfMission.gathering_point.value
+            
+        elif self.current_step_of_mission == self.StepOfMission.gathering_point.value:
+            self.target_id = 6
+            if rospy.get_param() == False:       #========================================================  parameter
+                if len(msg.markers) > 0:
+                    for msg in msg.markers:
+                        if msg.id == self.target_id:
+                            self.is_find = True
+                            if self.is_center_aligned == False and self.is_moving == False:
+                                self.move2marker(msg, self.current_step_of_mission)
+                else:
+                    if self.is_find == True:
+                        self.tw.linear.x = 0
+                        self.tw.angular.z = 0
+                        self.pub.publish(self.tw)
+
+                    else:
+                        if self.is_1st_back == True:
+                            self.is_1st_back = False
+                            self.straight(-0.1)
+                        print("find target")
+                        self.tw.linear.x = 0
+                        self.tw.angular.z = ANG_SPD
+                        self.pub.publish(self.tw)
+            
+            else:
+                Stop()
+                self.current_step_of_mission = self.StepOfMission.track_marker_second.value
+
+
+    def move2marker(self, msg, step):
+        self.tw.angular.x = 0
+        self.tw.angular.z = 0
+        self.pub.publish(self.tw)        
+        self.alignCenter(msg)
+        
+        if self.is_center_aligned == True:
+            self.is_moving = True
+            self.is_center_aligned = False            
+            self.getMarkerInfo(msg)
+ 
+            if self.z > LIM_ROT and abs(self.theta) > pi / 6:
+                self.calculateCarrotCoordinate()
+                self.rotate(self.angle)
+                if self.is_rotate_end == True:                
+                    self.straight(self.distance)
+                    if self.is_straight_end == True:
+                        self.rotate(-(self.theta+self.angle))
+                self.initMarkerInfo()
+            else:
+                self.straight2marker(step) 
+            self.is_moving = False
+                        
+    def alignCenter(self, msg):
+        #print("align")
+        center = msg.pose.pose.position.x
+        if center > X_TOLERANCE:
+            self.tw.angular.z = -ANG_SPD
+        elif center < -X_TOLERANCE:
+            self.tw.angular.z = ANG_SPD
+        else:
+            self.tw.angular.z = 0        
+        self.pub.publish(self.tw)
+        
+        if self.tw.angular.z == 0:
+            self.is_center_aligned = True
+       
+    def straight2marker(self, step):
+        if step == self.StepOfMission.track_marker_first.value or step == self.StepOfMission.track_marker_second.value:
+            if self.center > X_TOLERANCE + 0.01:
+                self.tw.angular.z = -ANG_SPD * 0.5
+            elif self.center < -X_TOLERANCE - 0.01:
+                self.tw.angular.z = ANG_SPD * 0.5
+            else:
+                self.tw.angular.z = 0
+            
+            if self.z > LIM_NEAR:
+                self.tw.linear.x = 0.7 * self.z + 0.01
+            else:
+                self.tw.linear.x = 0
+                
+            self.pub.publish(self.tw)
+
+        elif step == self.StepOfMission.work_space.value:
+            if self.z > LIM_NEAR:
+                self.tw.linear.x = 0.1
+            else:
+                #self.tw.linear.x = 0; self.pub.publish(self.tw)
+                if self.min_range < LIM_TARGET_POINT and self.min_range != 0:         
+                    self.tw.linear.x = 0; self.pub.publish(self.tw)                
+                    rospy.set_param('/follower/aligned', True)
+                    self.tw.linear.x = 0.05; self.pub.publish(self.tw)
+                    while self.min_range > LIM_GRAB_POINT:    pass
+                    print "=============== arrival ==============="
+                elif self.min_range > LIM_TARGET_POINT or self.min_range == 0:               
+                    print(round(self.min_range, 4))
+                    self.tw.linear.x = 0.1
+        
+        elif step == self.StepOfMission.gathering_point.value:
+            if self.z > LIM_NEAR:
+                self.tw.linear.x = 0.1      ########
+            elif self.min_range < LIM_TARGET_POINT and self.min_range != 0:
+                self.tw.linear.x = 0
+            
+            self.pub.publish(self.tw)
+        
+
+
+    def calculateCarrotCoordinate(self):
+        print("calculate")
+        self.distance = sqrt(OFFSET**2 + (self.z+CAM_ARM)**2 - (2*OFFSET*(self.z+CAM_ARM)*cos(self.theta)))
+        if self.theta > 0:
+            self.angle = asin(OFFSET/self.distance*sin(abs(self.theta)))
+        else:
+            self.angle = -asin(OFFSET/self.distance*sin(abs(self.theta)))
+
+    def getMarkerInfo(self, msg):         
+        q = (msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w)
+        quart = euler_from_quaternion(q)
+        
+        self.theta = quart[1]                        # range from (-3.14, 3.14) 
+        self.z = DIST_CONST * msg.pose.pose.position.z
+        self.center = msg.pose.pose.position.x
+
+    def initMarkerInfo(self):
+        self.theta = 0
+        self.z = 0
+        self.center = 0        
+
+    def cbGetPose(self, msg):
+        self.tb3pose = msg
+        
+    def updateOrg(self):
+        while self.tb3pose.x == 0.0 or self.tb3pose.y == 0.0: pass
+        
+        self.org = self.tb3pose
+
+    def elapsedDist(self):
+        return sqrt(pow((self.tb3pose.x - self.org.x), 2) + pow((self.tb3pose.y - self.org.y), 2))
+
+    def straight(self, distance):
+        self.is_straight_end = False
+        tw = Twist()
+        self.updateOrg()
+        print("\ndistance: {} cm".format(round(distance*100, 2)))
+        print("start from (%s, %s)" %(round(self.org.x, 4), round(self.org.y, 4)))
+        
+        if distance >= 0:
+            tw.linear.x = LIN_SPD
+        else:
+            tw.linear.x = -LIN_SPD
+
+        self.pub.publish(tw)
+        while self.elapsedDist() < abs(distance):  pass
+        
+        tw.linear.x = 0;    self.pub.publish(tw)
+        print("stop to (%s, %s)" %(round(self.tb3pose.x, 2), round(self.tb3pose.y, 2)))
+        self.is_straight_end = True
+
+    def elapsedAngle(self):
+        return abs(self.tb3pose.theta - self.org.theta)
+
+    def rotate(self, angle):
+        self.is_rotate_end = False
+        print("rotate, {} deg".format(round(degrees(angle), 1)))
+        tw = Twist()
+        self.updateOrg()
+        
+        if angle >= 0:	# angle(+): rotate left(ccw)
+            tw.angular.z =  ANG_SPD;
+        else:			# angle(-): rotate right(cw)
+            tw.angular.z = -ANG_SPD;
+            
+        self.pub.publish(tw)
+        while self.elapsedAngle() < ROT_CONST * abs(angle):    pass
+
+        tw.angular.z =  0;  self.pub.publish(tw)
+        self.is_rotate_end = True
+
+    def Stop(self):
+        twist = Twist()
+        twist.linear.x = 0
+        twist.linear.y = 0
+        twist.linear.z = 0
+        twist.angular.x = 0
+        twist.angular.y = 0
+        twist.angular.z = 0
+        self.pub_cmd_vel.publish(twist)
+
+    def cbScan(self, msg):
+        print("scan")
+        angle = 0
+        t1 = msg.ranges
+        self.min_range = min(i for i in t1 if i > 0)
+        min_index = t1.index(self.min_range)
+
+        if  110 < min_index < 250:
+            pass
+        else:
+            if min_index < 110:
+                angle = min_index
+            else:
+                angle = min_index - 360
+
+        self.relative_angle = radians(angle)
+
+
+if __name__ == '__main__':
+    try:
+        FollowerMission()
+        rospy.spin()
+        
+    except rospy.ROSInterruptException:  pass
