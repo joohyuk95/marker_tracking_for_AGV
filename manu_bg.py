@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import rospy
 from serial import Serial
 
@@ -8,7 +9,8 @@ str0 = '0'
 str1 = '1'
 
 while True:
-        pa = rospy.get_param('/tb2/mission')
+        tb_id = rospy.get_param('/tb_id')
+        pa = rospy.get_param('/'+tb_id+'/mission')
         if pa == True:
                 ser.write(str0.encode())
                 rospy.sleep(2)
