@@ -296,45 +296,42 @@ if __name__ == '__main__':
         mission1 = Followers()
         mission1.mission_step = 1
         if tb_id == 'tb2':
-            mission1.target_id = 10
+            mission1.target_id = 16
         elif tb_id == 'tb3':
-            mission1.target_id = 6
+            mission1.target_id = 10
         mission1.markerTracking()
 
         #미션 수행
         mission2 = Followers()
         mission2.mission_step = 2
         if tb_id == 'tb2':
-            mission2.target_id = 10
+            mission2.target_id = 7
         elif tb_id == 'tb3':
-            mission2.target_id = 6
+            mission2.target_id = 5
         mission2.workspace()
 
         #RP
         mission3 = Followers()
         mission3.mission_step = 3
-        if tb_id == 'tb2':
-            mission3.target_id = 10
-        elif tb_id == 'tb3':
-            mission3.target_id = 6
+        mission3.target_id = 6
         mission3.rallyPoint()
 
         #마커 트래킹
         mission1 = Followers()
         mission1.mission_step = 1
         if tb_id == 'tb2':
-            mission1.target_id = 10
+            mission1.target_id = 16
         elif tb_id == 'tb3':
-            mission1.target_id = 6
+            mission1.target_id = 10
         mission1.markerTracking()
 
         #주차
         mission4 = Followers()
         mission4.mission_step = 4
         if tb_id == 'tb2':
-            mission4.target_id = 10
+            mission4.target_id = 7
         elif tb_id == 'tb3':
-            mission4.target_id = 6
+            mission4.target_id = 5
         mission4.parking()
 
     except rospy.ROSInterruptException:  pass
