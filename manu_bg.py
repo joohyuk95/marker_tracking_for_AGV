@@ -16,23 +16,23 @@ str1 = '1'
 tb_id = sys.argv[1]
 
 while True:
-    if rospy.get_param('/'+tb_id+'/mission') == True:
+    if rospy.get_param('/'+tb_id+'/mission_start') == True and rospy.get_param('/'+tb_id+'/mission') == True:
         ser.write(str0.encode())
         rospy.sleep(2)
         ser.write(str1.encode())
         rospy.sleep(1)
         rospy.set_param('/'+tb_id+'/mission_finished', True)
+        rospy.set_param('/'+tb_id+'/mission', False)
         break
     else:
         pass
 
 while True:
-    if rospy.get_param('/'+tb_id+'/mission') == True:
-        ser.write(str1.encode())
-        rospy.sleep(2)
+    if rospy.get_param('/'+tb_id+'/mission_finished') == True and rospy.get_param('/'+tb_id+'/mission') == True:
         ser.write(str0.encode())
+        rospy.sleep(2)
+        ser.write(str1.encode())
         rospy.sleep(1)
-        rospy.set_param('/'+tb_id+'/mission_finished', True)
         break
     else:
         pass
