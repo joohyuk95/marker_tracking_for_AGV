@@ -8,7 +8,6 @@ from geometry_msgs.msg import Twist
 
 class ControlLane():
     def __init__(self):
-        rospy.set_param('/tb1/move_forward', False)
 
         self.sub_lane = rospy.Subscriber('/control/lane', Float64, self.cbFollowLane, queue_size = 1)
         self.sub_max_vel = rospy.Subscriber('/control/max_vel', Float64, self.cbGetMaxVel, queue_size = 1)
@@ -23,8 +22,8 @@ class ControlLane():
         self.MAX_VEL = max_vel_msg.data
 
     def cbFollowLane(self, desired_center):
-        if rospy.get_param('/tb1/move_forward') == True:
 
+        if rospy.get_param('/tb3/aligned') and rospy.get_param('/tb1/move_forward'):
             center = desired_center.data
 
             error = center - 500
@@ -44,7 +43,13 @@ class ControlLane():
             self.pub_cmd_vel.publish(twist)
 
         elif rospy.get_param('/tb1/move_forward') == False:
-            self.fnShutDown()
+            if rospy.get_param('/tb1/parking_start') == False:
+                print("====Wait====")
+                self.fnShutDown()
+
+            elif rospy.get_param('/tb1/parking_start'):
+                print("==Parking Start==")
+                self.fnShutDown()    
 
     def fnShutDown(self):
         rospy.loginfo("Stop")
