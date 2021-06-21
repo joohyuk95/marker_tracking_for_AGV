@@ -57,7 +57,9 @@ class ControlLane():
                 self.fnRotate(-1)
                 self.fnStraight()
                 self.fnRotate(1)
-                break
+                rospy.set_param('/tb1/parking_start', False)
+                rospy.set_param('/tb3/parking_start', True)
+            
 
     def fnStop(self):
         twist = Twist()
