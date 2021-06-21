@@ -51,6 +51,8 @@ class ControlLane():
             elif rospy.get_param('/tb1/parking_start'):
                 self.fnStop()
                 rospy.sleep(2)
+                rospy.set_param('/tb2/rally_finished', True)
+                rospy.set_param('/tb3/rally_finished', True)
                 print("==Parking Start==")
                 self.fnRotate(-1)
                 self.fnStraight()
