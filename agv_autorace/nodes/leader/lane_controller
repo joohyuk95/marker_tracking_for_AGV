@@ -16,7 +16,7 @@ class ControlLane():
         self.lastError = 0
         self.MAX_VEL = 0.12
 
-        rospy.on_shutdown(self.fnShutDown)
+        rospy.on_shutdown(self.fnStop)
 
     def cbGetMaxVel(self, max_vel_msg):
         self.MAX_VEL = max_vel_msg.data
@@ -24,6 +24,7 @@ class ControlLane():
     def cbFollowLane(self, desired_center):
 
         if rospy.get_param('/tb3/aligned') and rospy.get_param('/tb1/move_forward'):
+        # if rospy.get_param('/tb3/aligned') and rospy.get_param('/tb1/move_forward'):
             center = desired_center.data
 
             error = center - 500
@@ -45,15 +46,18 @@ class ControlLane():
         elif rospy.get_param('/tb1/move_forward') == False:
             if rospy.get_param('/tb1/parking_start') == False:
                 print("====Wait====")
-                self.fnShutDown()
+                self.fnStop()
 
             elif rospy.get_param('/tb1/parking_start'):
+                self.fnStop()
+                rospy.sleep(2)
                 print("==Parking Start==")
-                self.fnShutDown()    
+                self.fnRotate(-1)
+                self.fnStraight()
+                self.fnRotate(1)
+                break
 
-    def fnShutDown(self):
-        rospy.loginfo("Stop")
-
+    def fnStop(self):
         twist = Twist()
         twist.linear.x = 0
         twist.linear.y = 0
@@ -62,6 +66,30 @@ class ControlLane():
         twist.angular.y = 0
         twist.angular.z = 0
         self.pub_cmd_vel.publish(twist) 
+
+    def fnRotate(self, direction): #CW 90
+        twist = Twist()
+        angular_speed = 30 * 0.0174533
+        relative_angle = 90 * 0.0174533
+        twist.angular.z = direction * angular_speed
+        duration = relative_angle / angular_speed
+        time2end = rospy.Time.now() + rospy.Duration(duration)
+        self.pub_cmd_vel.publish(twist)
+        rospy.sleep(0.001)
+        while(rospy.Time.now() < time2end):
+            pass
+        self.fnStop()
+
+    def fnStraight(self):
+        twist = Twist()
+        twist.linear.x =  0.1
+        duration = 0.2 / 0.1 # distance / speed
+        time2end = rospy.Time.now() + rospy.Duration(duration)    
+        self.pub_cmd_vel.publish(twist)
+        rospy.sleep(0.001)    
+        while(rospy.Time.now() < time2end):
+            pass          
+        self.fnStop()
 
     def main(self):
         rospy.spin()
