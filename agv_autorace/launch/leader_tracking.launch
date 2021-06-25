@@ -1,6 +1,6 @@
 <launch>
   <group ns="tb1"> 
-   <!-- lane detection -->
+    <!-- lane detection -->
     <node pkg="agv_autorace" type="lane_detector" name="lane_detector" output="screen">
       <remap from="/detect/image_input" to="/tb1/camera/image_projected_compensated" />
       <remap from="/detect/image_input/compressed" to="/tb1/camera/image_projected_compensated/compressed" />
@@ -11,8 +11,7 @@
       <remap from="/detect/yellow_line_reliability" to="/tb1/detect/yellow_line_reliability" />        
       <remap from="/detect/white_line_reliability" to="/tb1/detect/white_line_reliability" />               
     </node>
-
-  <!-- sign detection -->
+    <!-- sign detection -->
     <node pkg="agv_autorace" type="sign_detector" name="sign_detector" output="screen">
       <param name="/is_detection_calibration_mode" value="False"/>     
       <remap from="/detect/image_input" to="/tb1/camera/image_compensated" />
@@ -26,8 +25,7 @@
       <remap from="/detect/image_output_sub3" to="/tb1/detect/image_green_light" />
       <remap from="/detect/image_output_sub3/compressed" to="/tb1/detect/image_green_light/compressed" />  
     </node>
-
-  <!-- leader control -->
+    <!-- leader control -->
     <node pkg="agv_autorace" type="lane_controller" name="lane_controller" output="screen">
         <remap from="/control/lane" to="/tb1/detect/lane" />
         <remap from="/control/cmd_vel" to="/tb1/cmd_vel" />
