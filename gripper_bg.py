@@ -7,7 +7,7 @@ if len(sys.argv) != 2:
         print("Usage: python manu_bg.py [tb2|tb3]")
         sys.exit()
 
-ser = Serial('/dev/ttyMANU', 115200)
+ser = Serial('/dev/ttyGRP', 115200)
 
 str0 = '0'
 str1 = '1'
