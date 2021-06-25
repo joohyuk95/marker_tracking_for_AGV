@@ -1,6 +1,6 @@
 <launch>
 
-<!--roslaunch agv_autorace follower.launch tb_num:=tb3-->
+  <!--roslaunch agv_autorace follower.launch tb_num:=tb3-->
 
   <arg name="tb_num" />
   <param name="tb_id" value="$(arg tb_num)" />
@@ -39,7 +39,5 @@
       <remap from="tf"   to="$(arg tb_num)/tf" />
       <remap from="/ar_pose_marker" to="/$(arg tb_num)/ar_pose_marker" />
     </node>
-    
-  <!-- </group> -->
 
 </launch>
