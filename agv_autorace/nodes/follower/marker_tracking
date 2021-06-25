@@ -129,7 +129,6 @@ class Followers:
                 pass
         else:
             self.stop()
-            rospy.sleep(0.1)
             self.is_find = False
             if self.mission_step == 1:
                 self.mission_step = 2
