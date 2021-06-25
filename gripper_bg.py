@@ -4,7 +4,7 @@ import rospy
 from serial import Serial
 
 if len(sys.argv) != 2:
-        print("Usage: python manu_bg.py [tb2|tb3]")
+        print("Usage: python gripper_bg.py [tb2|tb3]")
         sys.exit()
 
 ser = Serial('/dev/ttyGRP', 115200)
