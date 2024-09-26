@@ -1,21 +1,29 @@
 <launch>
 
   <group ns="tb1">
-    <param name="move_forward" value="False" type="bool"/>
+    <param name="move_forward" value="True" type="bool"/>
     <param name="parking_start" value="False" type="bool"/>
     <param name="parking_finished" value="False" type="bool"/>
   </group>
   <group ns="tb2">  
     <param name="mission_start" value="False" type="bool" />
+    <param name="mission" value="False" type="bool" />
     <param name="mission_finished" value="False" type="bool" />
+    <param name="rally_start" value="False" type="bool" />
+    <param name="rally_finished" value="False" type="bool" />
     <param name="aligned" value="False" type="bool" />
+    <param name="parking_start" value="False" type="bool"/>
+    <param name="parking_finished" value="False" type="bool"/>
  </group>
-  <group ns="tb3">
-    <param name="aligned" value="False" type="bool" />
+ <group ns="tb3">
     <param name="mission_start" value="False" type="bool" />
+    <param name="mission" value="False" type="bool" />
     <param name="mission_finished" value="False" type="bool" />
+    <param name="rally_start" value="False" type="bool" />
+    <param name="rally_finished" value="False" type="bool" />
+    <param name="aligned" value="False" type="bool" />
+    <param name="parking_start" value="False" type="bool"/>
+    <param name="parking_finished" value="False" type="bool"/>
   </group>
-
-  <node pkg="agv_autorace" name="core" type="core" output="screen" />  
-
+  <node pkg="agv_autorace" name="core" type="core" output="screen" />
 </launch>

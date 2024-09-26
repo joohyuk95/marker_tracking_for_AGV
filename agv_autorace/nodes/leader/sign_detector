@@ -88,34 +88,35 @@ class DetectSign():
         cv_image_mask_g = self.fnMaskGreenSign()
         cv_image_mask_g = cv2.GaussianBlur(cv_image_mask_g,(5,5),0)
         self.detected_green = np.count_nonzero(cv_image_mask_g == 0)
-        print("GREEN : ", np.count_nonzero(cv_image_mask_g == 0))
 
         cv_image_mask_b = self.fnMaskBlueSign()
         cv_image_mask_b = cv2.GaussianBlur(cv_image_mask_b,(5,5),0)
         self.detected_blue = np.count_nonzero(cv_image_mask_b == 0)
-        print("BLUE : ", np.count_nonzero(cv_image_mask_b == 0))
 
         cv_image_mask_r = self.fnMaskRedSign()
         cv_image_mask_r = cv2.GaussianBlur(cv_image_mask_r,(5,5),0)
         self.detected_red = np.count_nonzero(cv_image_mask_r == 0)
-        print("RED : ", self.detected_red)
 
-        if self.detected_green > 5000:
+        if self.detected_green > 3000 and self.detected_blue < 100 and self.detected_red < 100:
             rospy.set_param('/tb3/mission_start', True)
-            print(rospy.get_param('/tb3/mission_start'))    
-
-        if self.detected_blue > 5000:
+            print("TURTLEBOT3 MISSION START")   
+        if self.detected_blue > 3000 and self.detected_green < 100 and self.detected_red < 100:
             rospy.set_param('/tb2/mission_start', True)
-            print(rospy.get_param('/tb3/mission_start'))    
+            print("TURTLEBOT2 MISSION START")  
 
-        if self.detected_red > 3000:
+        if self.detected_red > 1000 and self.detected_green < 100 and self.detected_blue < 100:
             rospy.set_param('/tb1/move_forward', False)
-            print(rospy.get_param('/tb2/mission_start'))
+            print("WAIT FOR TB2 ALIGNED")
 
-        if self.detected_red > 2000 and rospy.get_param('/tb3/aligned') == True:
+        if self.detected_red > 500 and self.detected_green < 100 and self.detected_blue < 100 and rospy.get_param('/tb2/aligned') == True:
             self.detected_red = 0
             rospy.set_param('/tb1/move_forward', True)
-                
+            print("GO TO PARKING LOT")
+
+        if self.detected_blue > 1000 and self.detected_green > 1000:
+            rospy.set_param('/tb1/move_forward', False)
+            rospy.set_param('/tb1/parking_start', True)
+            print("PARKING")
 
     def fnMaskRedSign(self):
         image = np.copy(self.cv_image)

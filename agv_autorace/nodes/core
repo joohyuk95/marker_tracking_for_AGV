@@ -15,13 +15,19 @@ class AutoraceCore:
 
         # tb2 parameters
         self.tb2missionstart = rospy.get_param('/tb2/mission_start')
+        self.tb2mission = rospy.get_param('/tb2/mission')
         self.tb2missionfinished = rospy.get_param('/tb2/mission_finished')
         self.tb2aligned = rospy.get_param('/tb2/aligned')
+        self.tb2parkingstart = rospy.get_param('/tb2/parking_start')
+        self.tb2parkingfinished = rospy.get_param('/tb2/parking_finished')
 
         # tb3 parameters
         self.tb3missionstart = rospy.get_param('/tb3/mission_start')
+        self.tb3mission = rospy.get_param('/tb3/mission')        
         self.tb3missionfinished = rospy.get_param('/tb3/mission_finished')
         self.tb3aligned = rospy.get_param('/tb3/aligned')
+        self.tb3parkingstart = rospy.get_param('/tb3/parking_start')
+        self.tb3parkingfinished = rospy.get_param('/tb3/parking_finished')
 
 if __name__ == '__main__':
     try:

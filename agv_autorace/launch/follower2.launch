@@ -1,0 +1,43 @@
+<launch>
+
+<!--roslaunch agv_autorace follower.launch tb_num:=tb2-->
+  
+  <arg name="tb_num" />
+  <param name="tb_id" value="$(arg tb_num)" />
+
+  <group ns="$(arg tb_num)">
+    
+    <!--Camera incalib-->
+    <arg name="calibration_mode" default="action" doc="calibration_mode type [calibration, action]"/>
+    <arg name="use_gazebo" default="false" doc="gazebo_mode type [true, false]"/>
+    <node pkg="image_transport" type="republish" name="republish" args="compressed in:=camera/image raw out:=camera/image" />
+    <node ns="camera" pkg="image_proc" type="image_proc" name="image_proc" args="_approximate_sync:=true">
+      <remap from="image_raw" to="image" />
+      <param name="queue_size" value="20" />
+    </node>
+
+    <!--PUB TB3 POSE-->
+    <node pkg="agv_autorace" name="pub_tb3_pose" type="pub_tb3_pose" output="screen" />
+      <remap from="/tb3pose" to="/$(arg tb_num)/tb3pose" />
+
+    <!--MARKER TRACKING-->
+    <node pkg="agv_autorace" name="marker_tracking" type="marker_tracking" output="screen">
+      <remap from="/cmd_vel" to="/$(arg tb_num)/cmd_vel" />
+      <remap from="/ar_pose_marker" to="/$(arg tb_num)/ar_pose_marker" />
+      <!-- <remap from="/tb3pose" to="/$(arg tb_num)/tb3pose" /> -->
+      <remap from="/scan" to="/$(arg tb_num)/scan" />
+    </node>   
+  </group>
+
+    <!--AR_POSE_MARKER-->
+    <node name="ar_track_alvar_for_tb2" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen">
+      <param name="marker_size"           type="double" value="5.5" />
+      <param name="max_new_marker_error"  type="double" value="0.08" />
+      <param name="max_track_error"       type="double" value="0.2" />
+      <param name="output_frame"          type="string" value="camera" />
+      <remap from="camera_image"  to="$(arg tb_num)/camera/image" />
+      <remap from="camera_info"   to="$(arg tb_num)/camera/camera_info" />
+      <remap from="tf"   to="$(arg tb_num)/tf" />
+      <remap from="/ar_pose_marker" to="/$(arg tb_num)/ar_pose_marker" />
+    </node>
+</launch>
